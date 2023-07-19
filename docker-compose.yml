@@ -1,0 +1,40 @@
+version: '3.4'
+
+networks:
+  dev:
+    driver: bridge 
+
+services:
+  person-service:
+    image: ${REGISTRY:-service-one}/person-service.api:${PLATFORM:-linux}-${TAG:-latest}
+    depends_on:
+      - "person_db"
+    container_name: person-service
+    ports:
+      - "5009:80"
+    build:
+      context: .
+      dockerfile: PersonApi/Dockerfile
+    environment:
+      - ConnectionString=host=person_db;port=5432;database=person_db;username=postgres;password=postgres;Pooling=true;
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - dev
+
+  person_db:
+    image: postgres:latest
+    container_name: person_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=person_db
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - person_data:/var/lib/postgresql/data/ 
+    networks:
+      - dev
+
+volumes:
+  person_data:
